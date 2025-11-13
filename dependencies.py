@@ -167,3 +167,20 @@ def topological_sort(graph):
     # Проверить на цикл
     has_cycle = len(order) < len(graph)
     return order, has_cycle
+
+
+def generate_mermaid(graph, start_package):
+    """
+    Генерирует текстовое представление графа в формате Mermaid.
+    Направление: от пакета к зависимостям (parent --> dep).
+    """
+    mermaid_lines = ["graph TD"]
+    for pkg, deps in graph.items():
+        for dep in deps:
+            mermaid_lines.append(f"    {pkg} --> {dep}")
+
+    # Если нет зависимостей, добавить корень
+    if not mermaid_lines[1:]:
+        mermaid_lines.append(f"    {start_package}")
+
+    return "\n".join(mermaid_lines)

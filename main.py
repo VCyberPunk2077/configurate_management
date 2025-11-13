@@ -1,8 +1,7 @@
 import argparse
 import os
 from urllib.parse import urlparse
-from dependencies import build_dependency_graph, topological_sort
-
+from dependencies import build_dependency_graph, topological_sort, generate_mermaid
 
 def validate_repo(repo, mode):
     if mode == 'remote':
@@ -18,7 +17,7 @@ def validate_repo(repo, mode):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Инструмент визуализации графа зависимостей для NuGet пакетов с поддержкой теста и вывода порядка."
+        description="Инструмент визуализации графа зависимостей для NuGet пакетов с поддержкой теста, порядка и Mermaid."
     )
 
     parser.add_argument('-p', '--package', required=True, type=str, help='Имя анализируемого пакета.')
@@ -28,8 +27,8 @@ def main():
                         help='Режим: local, remote или test.')
     parser.add_argument('-d', '--max-depth', default=3, type=int, help='Максимальная глубина (по умолчанию 3).')
     parser.add_argument('-f', '--filter', default='', type=str, help='Подстрока для фильтрации (по умолчанию пустая).')
-    parser.add_argument('-o', '--output', default='graph', type=str, choices=['graph', 'topological'],
-                        help='Режим вывода: graph или topological (по умолчанию graph).')
+    parser.add_argument('-o', '--output', default='graph', type=str, choices=['graph', 'topological', 'mermaid'],
+                        help='Режим вывода: graph, topological или mermaid (по умолчанию graph).')
 
     try:
         args = parser.parse_args()
@@ -59,6 +58,10 @@ def main():
             print("Порядок загрузки зависимостей:", ', '.join(order))
             if has_cycle:
                 print("Предупреждение: Обнаружен цикл в зависимостях, порядок частичный.")
+        elif args.output == 'mermaid':
+            mermaid_code = generate_mermaid(graph, args.package)
+            print("Mermaid диаграмма:")
+            print(mermaid_code)
 
     except ValueError as ve:
         print(f"Ошибка валидации: {ve}")
