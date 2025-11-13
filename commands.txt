@@ -1,0 +1,25 @@
+Этап 1: Минимальный прототип с конфигурацией
+python main.py -p numpy -r https://api.nuget.org/v3/index.json -m remote -d 5 -f sci
+
+Этап 2: Сбор данных
+python main.py -p Newtonsoft.Json -r https://api.nuget.org/v3/index.json -m remote
+python main.py -p Newtonsoft.Json -r ./newtonsoft.json.13.0.3.nupkg -m local
+
+Этап 3: Основные операции
+python main.py -p A -r ./simple.json -m test -d 3
+python main.py -p A -r ./cycle.json -m test -d 5
+python main.py -p A -r ./simple.json -m test -d 3 -f "C"
+python main.py -p A -r ./simple.json -m test -d 1
+python main.py -p A -r ./missing.json -m test
+
+Этап 4: Дополнительные операции
+python main.py -p A -r ./simple.json -m test -d 3 --output topological
+python main.py -p A -r ./cycle.json -m test -d 5 --output topological
+python main.py -p A -r ./simple.json -m test -d 2 -f "D" --output topological
+python main.py -p Microsoft.EntityFrameworkCore -r https://api.nuget.org/v3/index.json -m remote -d 2 --output topological
+git add dependencies.py main.py
+
+Этап 5: Визуализация
+python main.py -p Newtonsoft.Json -r https://api.nuget.org/v3/index.json -m remote -d 1 --output mermaid
+python main.py -p Microsoft.EntityFrameworkCore -r https://api.nuget.org/v3/index.json -m remote -d 2 -f "Abstractions" --output mermaid
+python main.py -p A -r ./simple.json -m test -d 3 --output mermaid
