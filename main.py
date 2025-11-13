@@ -1,7 +1,7 @@
 import argparse
 import os
 from urllib.parse import urlparse
-from dependencies import build_dependency_graph  # Обновленный импорт
+from dependencies import build_dependency_graph, topological_sort
 
 
 def validate_repo(repo, mode):
@@ -18,7 +18,7 @@ def validate_repo(repo, mode):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Инструмент визуализации графа зависимостей для NuGet пакетов с поддержкой теста."
+        description="Инструмент визуализации графа зависимостей для NuGet пакетов с поддержкой теста и вывода порядка."
     )
 
     parser.add_argument('-p', '--package', required=True, type=str, help='Имя анализируемого пакета.')
@@ -28,6 +28,8 @@ def main():
                         help='Режим: local, remote или test.')
     parser.add_argument('-d', '--max-depth', default=3, type=int, help='Максимальная глубина (по умолчанию 3).')
     parser.add_argument('-f', '--filter', default='', type=str, help='Подстрока для фильтрации (по умолчанию пустая).')
+    parser.add_argument('-o', '--output', default='graph', type=str, choices=['graph', 'topological'],
+                        help='Режим вывода: graph или topological (по умолчанию graph).')
 
     try:
         args = parser.parse_args()
@@ -43,12 +45,20 @@ def main():
         print(f"mode: {args.mode}")
         print(f"max_depth: {args.max_depth}")
         print(f"filter: {args.filter}")
+        print(f"output: {args.output}")
 
-        # Построить и вывести граф
+        # Построить граф
         graph = build_dependency_graph(args.package, args.repo, args.mode, args.max_depth, args.filter)
-        print("Граф зависимостей:")
-        for pkg, deps in graph.items():
-            print(f"{pkg}: {', '.join(deps) if deps else 'Нет зависимостей'}")
+
+        if args.output == 'graph':
+            print("Граф зависимостей:")
+            for pkg, deps in graph.items():
+                print(f"{pkg}: {', '.join(deps) if deps else 'Нет зависимостей'}")
+        elif args.output == 'topological':
+            order, has_cycle = topological_sort(graph)
+            print("Порядок загрузки зависимостей:", ', '.join(order))
+            if has_cycle:
+                print("Предупреждение: Обнаружен цикл в зависимостях, порядок частичный.")
 
     except ValueError as ve:
         print(f"Ошибка валидации: {ve}")

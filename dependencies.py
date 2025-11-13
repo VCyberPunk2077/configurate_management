@@ -4,7 +4,7 @@ import gzip
 import zipfile
 import xml.etree.ElementTree as ET
 import os
-from collections import deque
+from collections import deque, defaultdict
 
 
 def get_direct_dependencies(package, repo, mode):
@@ -136,3 +136,34 @@ def build_dependency_graph(start_package, repo, mode, max_depth, filter_str):
                 queue.append((dep, depth + 1))
 
     return graph
+
+
+def topological_sort(graph):
+    """
+    Выполняет topological sort с помощью Kahn's algorithm (BFS).
+    Возвращает список пакетов в порядке загрузки (зависимости сначала).
+    Если цикл - возвращает частичный порядок и флаг цикла.
+    """
+    # Вычислить in-degree (кол-во входящих рёбер)
+    indegree = defaultdict(int)
+    for deps in graph.values():
+        for dep in deps:
+            indegree[dep] += 1
+
+    # Добавить узлы без входящих (листья или изолированные)
+    queue = deque([pkg for pkg in graph if indegree[pkg] == 0])
+
+    order = []
+    while queue:
+        current = queue.popleft()
+        order.append(current)
+
+        # Уменьшить indegree соседей
+        for neighbor in graph.get(current, []):
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0:
+                queue.append(neighbor)
+
+    # Проверить на цикл
+    has_cycle = len(order) < len(graph)
+    return order, has_cycle
